@@ -7,3 +7,4 @@ const DB_SERVER_PASSWORD = 'db_password'; // пароль пользовател
 const DB_DATABASE = 'db_name'; // имя базы данных
 
 const AUTH_TOKEN = 'dklkn42dxdldlk35l2qfcadslm2452ltmfcascmpoo465rmgvasdkhsdasdl3mdl'; // авторизация
+
