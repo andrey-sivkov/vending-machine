@@ -91,15 +91,18 @@ class Product
         if ($price <= $balance) {
             // уменьшаем остаток на счете
             $balance = $seance->changeBalance(-$price);
-            // если остаток на счете нулевой, закрываем сеанс
-            if ($balance == 0)
-                $seance->finish();
+            // уменьшаем кол-во товара
+            $success = $this->changeQuantity($product_id, -1);
 
             // логируем покупку товара
             $seance->log('product-order', $balance, -$price);
 
+            // если остаток на счете нулевой, закрываем сеанс
+            if ($balance === '0')
+                $seance->finish();
+
             $result = [
-                'success' => $this->changeQuantity($product_id, -1),
+                'success' => $success,
                 'balance' => $balance
             ];
         }

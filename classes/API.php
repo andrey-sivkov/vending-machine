@@ -1,5 +1,7 @@
 <?php
 
+use DbSimple_Mysqli as DB;
+
 /**
  * Class API
  */
@@ -12,7 +14,8 @@ class API
         $coin,
         $banknote,
         $product,
-        $seance;
+        $seance,
+        $token;
 
     /**
      * API constructor.
@@ -22,6 +25,7 @@ class API
     public function __construct($dblink)
     {
         $this->setDblink($dblink)
+            ->setToken()
             ->setMethod($_SERVER['REQUEST_METHOD'])
             ->setAction($_GET['action'])
             ->setParams()
@@ -48,6 +52,35 @@ class API
     public function getDblink()
     {
         return $this->dblink;
+    }
+
+    /**
+     * @return $this
+     */
+    public function setToken()
+    {
+        $headers = array_change_key_case(getallheaders());
+        $this->token = isset($headers['authorization']) ? $headers['authorization'] : null;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getToken()
+    {
+        return $this->token;
+    }
+
+    /**
+     * Проверка токена авторизации
+     * @param $token
+     * @return string
+     */
+    public function checkToken($token)
+    {
+        return $this->getToken() === $token;
     }
 
     /**

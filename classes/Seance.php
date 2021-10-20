@@ -50,7 +50,7 @@ class Seance
             if (empty($seance['id'])) {
                 // Нет ни одного активного сеанса, начинаем новый
                 $this->seanceId = $this->start();
-            } else if ($seance['balance'] === 0 || $seance['balance'] === '0') {
+            } else if ($seance['balance'] === '0') {
                 // На счету 0, закрываем предыдущий сеанс и начинаем новый
                 $this->finish($seance['id']);
                 $this->seanceId = $this->start();

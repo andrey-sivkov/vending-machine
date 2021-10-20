@@ -5,8 +5,7 @@
  */
 class Coin
 {
-    private $dblink;
-    protected $dbtable;
+    private $dblink, $money_type;
 
     /**
      * Coin constructor.
@@ -15,8 +14,8 @@ class Coin
      */
     public function __construct($dblink)
     {
-        $this->setDblink($dblink);
-        $this->dbtable = get_parent_class($this) ? 'banknotes' : 'coins';
+        $this->setDblink($dblink)
+            ->setMoneyType();
     }
 
     /**
@@ -39,6 +38,24 @@ class Coin
     }
 
     /**
+     * @return $this
+     */
+    private function setMoneyType()
+    {
+        $this->money_type = get_parent_class($this) ? 'banknotes' : 'coins';;
+
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    private function getMoneyType()
+    {
+        return $this->money_type;
+    }
+
+    /**
      * Изменение кол-ва монет / купюр в аппарате
      *
      * @param $denom
@@ -47,7 +64,7 @@ class Coin
      */
     public function changeQuantity($denom, $qty = 1)
     {
-        return $this->getDblink()->query('update ?# set quantity = quantity + ?d where denom = ?d', $this->dbtable, $qty, $denom);
+        return $this->getDblink()->query('update ?# set quantity = quantity + ?d where denom = ?d', $this->getMoneyType(), $qty, $denom);
     }
 
     /**
@@ -66,7 +83,8 @@ class Coin
             $balance = $seance->changeBalance($denom);
 
             // логируем внесение денег в аппарат
-            $seance->log('coin-add', $balance, $denom);
+            $action = $this->getMoneyType() == 'banknotes' ? 'banknote-add' : 'coin-add';
+            $seance->log($action, $balance, $denom);
 
             $result = [
                 'success' => true,
@@ -84,7 +102,7 @@ class Coin
      */
     public function getAll()
     {
-        return $this->getDblink()->selectCol('select denom from ?# order by denom', $this->dbtable);
+        return $this->getDblink()->selectCol('select denom from ?# order by denom', $this->getMoneyType());
     }
 
     /**
@@ -95,9 +113,9 @@ class Coin
      */
     public function restore()
     {
-        $qty = $this->dbtable == 'banknotes' ? 0 : 100;
+        $qty = $this->getMoneyType() == 'banknotes' ? 0 : 100;
 
-        return $this->getDblink()->query('update ?# set quantity = ?d', $this->dbtable, $qty);
+        return $this->getDblink()->query('update ?# set quantity = ?d', $this->getMoneyType(), $qty);
     }
 
     /**
