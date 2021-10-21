@@ -2,15 +2,12 @@
     max-width: 900px;
     margin: auto;
 }
-.tab-pane {
-    padding: 1em;
-}
 .alert {
     position: absolute;
     top: 0;
     right: 0;
     width: 300px;
 }
-.xsmall {
-    font-size: 75%;
+.btn-get-change {
+    display: none;
 }
