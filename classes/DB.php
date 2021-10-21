@@ -14,8 +14,8 @@ class DB
     public static function getInstance()
     {
         if (is_null(self::$instance)) {
-            $dblink = new DB;
-            self::$instance = $dblink->getDblink();
+            $db = new DB;
+            self::$instance = $db->getDblink();
         }
 
         return self::$instance;
