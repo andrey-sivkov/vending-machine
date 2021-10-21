@@ -9,22 +9,19 @@ class Seance
 
     /**
      * Seance constructor.
-     *
-     * @param $dblink
      */
-    public function __construct($dblink)
+    public function __construct()
     {
-        $this->setDblink($dblink)
+        $this->setDblink()
             ->setId();
     }
 
     /**
-     * @param mixed $dblink
      * @return $this
      */
-    private function setDblink($dblink)
+    protected function setDblink()
     {
-        $this->dblink = $dblink;
+        $this->dblink = DB::getInstance();
 
         return $this;
     }
@@ -46,7 +43,7 @@ class Seance
         if (!is_null($seance_id)) {
             $this->seanceId = $seance_id;
         } else {
-            $seance = $this->getDblink()->selectRow('select id, balance from seances where date_end is null order by id desc limit 1');
+            $seance = DB::getSeanceInfo();
             if (empty($seance['id'])) {
                 // Нет ни одного активного сеанса, начинаем новый
                 $this->seanceId = $this->start();
@@ -76,13 +73,13 @@ class Seance
      *
      * @return int
      */
-    public function start()
+    private function start()
     {
-        $seance_id = $this->getDblink()->query('insert into seances (date_start) values (now())');
+        $seance_id = DB::startSeance();
         $this->setId($seance_id);
 
         // логируем старт сеанса
-        $this->log('start');
+        $this->addLog('start');
 
         return $seance_id;
     }
@@ -94,15 +91,15 @@ class Seance
      * @param $seance_id
      * @return bool
      */
-    public function finish($seance_id = null)
+    private function finish($seance_id = null)
     {
         if (is_null($seance_id))
             $seance_id = $this->getId();
 
         // логируем завершение сеанса
-        $this->log('finish');
+        $this->addLog('finish');
 
-        return $this->getDblink()->query('update seances set date_end = now() where id = ?d and date_end is null', $seance_id);
+        return DB::finishSeance($seance_id);
     }
 
     /**
@@ -112,19 +109,30 @@ class Seance
      */
     public function getBalance()
     {
-        return $this->getDblink()->selectCell('select balance from seances where id = ?d', $this->getId());
+        return (int)DB::getSeanceBalance($this->getId());
     }
 
     /**
      * Добавление / вычитание (в зависимости от знака) суммы на счет покупателя
      *
      * @param $sum
+     * @param $action
      * @return mixed
      */
-    public function changeBalance($sum)
+    public function changeBalance($sum, $action)
     {
-        if ($this->getDblink()->query('update seances set balance = ifnull(balance, 0) + ?d where id = ?d', $sum, $this->getId()))
-            return $this->getBalance();
+        if (DB::changeSeanceBalance($this->getId(), $sum)) {
+            $balance = $this->getBalance();
+
+            // логируем внесение денег в аппарат
+            $this->addLog($action, $balance, $sum);
+
+            // если остаток на счете нулевой, закрываем сеанс
+            if ($balance === 0)
+                $this->finish();
+
+            return $balance;
+        }
 
         return false;
     }
@@ -142,7 +150,7 @@ class Seance
             'change' => '',     // описание сдачи
             'balance' => null     // итого на счете
         ];
-        $coin = new Coin($this->getDblink());
+        $coin = new Coin;
         $coins = $coin->getAll();
         // отсортируем монеты в порядке убывания их номинала, т.к. чтобы вернуть сдачу минимальным
         // количеством монет, начинать надо с монет бОльшего номинала
@@ -155,7 +163,7 @@ class Seance
                 $result['change'] .= Coin::qtyToText($amount) . ' по ' . Coin::sumToText($denom) . '<br/>' . "\n";
                 $balance = $balance%$denom;
                 if ($coin->changeQuantity($denom, -$amount))
-                    $result['balance'] = $this->changeBalance(-$amount*$denom);
+                    $result['balance'] = $this->changeBalance(-$amount*$denom, 'get-change');
             }
         }
         if ($result['change']) {
@@ -163,7 +171,7 @@ class Seance
                 '<hr size="1" class="mt-2 mb-1"/>' . $result['change'];
 
             // логируем выдачу сдачи
-            $this->log('change', $result['balance'], $orig_balance);
+            $this->addLog('change', $result['balance'], $orig_balance);
         }
 
         // заканчиваем сеанс
@@ -180,7 +188,7 @@ class Seance
      * @param $difference
      * @return int
      */
-    public function log($action, $balance = 0, $difference = 0)
+    private function addLog($action, $balance = 0, $difference = 0)
     {
         $log = [
             'seance_id' => $this->getId(),
@@ -189,6 +197,6 @@ class Seance
             'difference' => $difference
         ];
 
-        return $this->getDblink()->query('insert into logs (?#) values (?a)', array_keys($log), array_values($log));
+        return DB::addSeanceLog($log);
     }
 }

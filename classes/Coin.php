@@ -5,44 +5,22 @@
  */
 class Coin
 {
-    private $dblink, $money_type;
+    private $money_type;
 
     /**
      * Coin constructor.
-     *
-     * @param $dblink
      */
-    public function __construct($dblink)
+    public function __construct()
     {
-        $this->setDblink($dblink)
-            ->setMoneyType();
-    }
-
-    /**
-     * @param mixed $dblink
-     * @return $this
-     */
-    protected function setDblink($dblink)
-    {
-        $this->dblink = $dblink;
-
-        return $this;
-    }
-
-    /**
-     * @return mixed
-     */
-    private function getDblink()
-    {
-        return $this->dblink;
+        $this->setMoneyType();
     }
 
     /**
      * @return $this
      */
-    private function setMoneyType()
+    public function setMoneyType()
     {
-        $this->money_type = get_parent_class($this) ? 'banknotes' : 'coins';;
+        $this->money_type = get_parent_class($this) ? 'banknotes' : 'coins';
 
         return $this;
     }
@@ -64,7 +42,7 @@ class Coin
      */
     public function changeQuantity($denom, $qty = 1)
     {
-        return $this->getDblink()->query('update ?# set quantity = quantity + ?d where denom = ?d', $this->getMoneyType(), $qty, $denom);
+        return DB::changeCoinQuantity($denom, $this->getMoneyType(), $qty);
     }
 
     /**
@@ -79,12 +57,9 @@ class Coin
         $result = ['success' => false];
 
         if ($this->changeQuantity($denom, $qty)) {
-            $seance = new Seance($this->getDblink());
-            $balance = $seance->changeBalance($denom);
-
-            // логируем внесение денег в аппарат
-            $action = $this->getMoneyType() == 'banknotes' ? 'banknote-add' : 'coin-add';
-            $seance->log($action, $balance, $denom);
+            $action  = $this->getMoneyType() == 'banknotes' ? 'banknote-add' : 'coin-add';
+            $seance  = new Seance;
+            $balance = $seance->changeBalance($denom, $action);
 
             $result = [
                 'success' => true,
@@ -102,7 +77,7 @@ class Coin
      */
     public function getAll()
     {
-        return $this->getDblink()->selectCol('select denom from ?# order by denom', $this->getMoneyType());
+        return DB::getAllCoins($this->getMoneyType());
     }
 
     /**
@@ -115,7 +90,7 @@ class Coin
     {
         $qty = $this->getMoneyType() == 'banknotes' ? 0 : 100;
 
-        return $this->getDblink()->query('update ?# set quantity = ?d', $this->getMoneyType(), $qty);
+        return DB::restoreCoins($this->getMoneyType(), $qty);
     }
 
     /**

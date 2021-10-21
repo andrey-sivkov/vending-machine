@@ -9,13 +9,7 @@ spl_autoload_register(function($class) {
     include '../classes/' . $class . '.php';
 });
 
-// установка соединения с БД
-require_once '../vendor/DbSimple/Generic.php';
-$dblink = @DbSimple_Generic::connect('mysqli://' . DB_SERVER_USERNAME . ':' . DB_SERVER_PASSWORD . '@' . DB_SERVER . '/' . DB_DATABASE);
-if ($dblink->error['code'])
-    die($dblink->error['message']);
-
-$api = new API($dblink);
+$api = new API;
 
 if (!$api->checkToken(AUTH_TOKEN)) {
     header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden', true, 403);

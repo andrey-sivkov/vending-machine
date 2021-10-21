@@ -1,13 +1,11 @@
 <?php
 
-use DbSimple_Mysqli as DB;
-
 /**
  * Class API
  */
 class API
 {
-    private $dblink,
+    private $db,
         $method,
         $action,
         $params,
@@ -19,12 +17,10 @@ class API
 
     /**
      * API constructor.
-     *
-     * @param $dblink
      */
-    public function __construct($dblink)
+    public function __construct()
     {
-        $this->setDblink($dblink)
+        $this->setDB()
             ->setToken()
             ->setMethod($_SERVER['REQUEST_METHOD'])
             ->setAction($_GET['action'])
@@ -36,12 +32,11 @@ class API
     }
 
     /**
-     * @param mixed $dblink
      * @return $this
      */
-    public function setDblink($dblink)
+    public function setDB()
     {
-        $this->dblink = $dblink;
+        $this->db = DB::getInstance();
 
         return $this;
     }
@@ -49,9 +44,9 @@ class API
     /**
      * @return mixed
      */
-    public function getDblink()
+    public function getDB()
     {
-        return $this->dblink;
+        return $this->db;
     }
 
     /**
@@ -150,7 +145,7 @@ class API
      */
     public function setCoin()
     {
-        $this->coin = new Coin($this->getDblink());
+        $this->coin = new Coin;
 
         return $this;
     }
@@ -168,7 +163,8 @@ class API
      */
     public function setBanknote()
     {
-        $this->banknote = new Banknote($this->getDblink());
+        $this->banknote = new Banknote;
+
         return $this;
     }
 
@@ -185,7 +181,7 @@ class API
      */
     public function setProduct()
     {
-        $this->product = new Product($this->getDblink());
+        $this->product = new Product;
 
         return $this;
     }
@@ -203,7 +199,7 @@ class API
      */
     public function setSeance()
     {
-        $this->seance = new Seance($this->getDblink());
+        $this->seance = new Seance;
 
         return $this;
     }
@@ -280,7 +276,7 @@ class API
      */
     public function getBalance()
     {
-        return ['balance' => (int)$this->getSeance()->getBalance()];
+        return ['balance' => $this->getSeance()->getBalance()];
     }
 
     /**
