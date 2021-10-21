@@ -6,7 +6,7 @@
 class Banknote extends Coin
 {
     /**
-     * Coin constructor.
+     * Banknote constructor.
      */
     public function __construct()
     {
