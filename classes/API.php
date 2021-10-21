@@ -5,8 +5,7 @@
  */
 class API
 {
-    private $db,
-        $method,
+    private $method,
         $action,
         $params,
         $coin,
@@ -20,8 +19,7 @@ class API
      */
     public function __construct()
     {
-        $this->setDB()
-            ->setToken()
+        $this->setToken()
             ->setMethod($_SERVER['REQUEST_METHOD'])
             ->setAction($_GET['action'])
             ->setParams()
@@ -29,24 +27,6 @@ class API
             ->setBanknote()
             ->setProduct()
             ->setSeance();
-    }
-
-    /**
-     * @return $this
-     */
-    public function setDB()
-    {
-        $this->db = DB::getInstance();
-
-        return $this;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getDB()
-    {
-        return $this->db;
     }
 
     /**
@@ -121,11 +101,11 @@ class API
      */
     public function setParams()
     {
+        $request = '[]';
         if ($this->getMethod() == 'post')
             $request = file_get_contents('php://input');
-        else
-            $request = preg_match('/^[^\{]*(\{.*\})[^\}]*$/', urldecode($_SERVER['QUERY_STRING']), $matches) ?
-                $matches[1] : '[]';
+        else if (preg_match('/^[^\{]*(\{.*\})[^\}]*$/', urldecode($_SERVER['QUERY_STRING']), $matches))
+            $request = $matches[1];
 
         $this->params = json_decode($request, true);
 

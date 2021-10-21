@@ -6,6 +6,15 @@
 class Banknote extends Coin
 {
     /**
+     * Coin constructor.
+     */
+    public function __construct()
+    {
+        parent::__construct();
+        $this->setMoneyType('banknotes');
+    }
+
+    /**
      * @param $amount
      * @return string
      */

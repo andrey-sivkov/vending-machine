@@ -19,9 +19,9 @@ class Product
      * @param $qty
      * @return mixed
      */
-    private function changeQuantity($product_id, $qty = 1)
+    private function changeQuantity($product_id, $qty = -1)
     {
-        return DB::changeProductQuantity($product_id, $qty);
+        return DB::productChangeQuantity($product_id, $qty);
     }
 
     /**
@@ -31,7 +31,7 @@ class Product
      */
     public function getAll()
     {
-        return DB::getAllProducts();
+        return DB::productGetAll();
     }
 
     /**
@@ -44,7 +44,7 @@ class Product
      */
     public function getInfo($product_id, $field = '')
     {
-        $info = DB::getProductInfo($product_id);
+        $info = DB::productGetInfo($product_id);
 
         return (!empty($field) && isset($info[$field])) ? $info[$field] : $info;
     }
@@ -72,7 +72,7 @@ class Product
             return $result;
 
         // уменьшаем кол-во товара
-        if ($this->changeQuantity($product_id, -1)) {
+        if ($this->changeQuantity($product_id)) {
             // уменьшаем остаток на счете
             $balance = $seance->changeBalance(-$price, 'product-order');
 
@@ -92,6 +92,6 @@ class Product
      */
     public function restore()
     {
-        return DB::restoreProduct();
+        return DB::productRestore();
     }
 }

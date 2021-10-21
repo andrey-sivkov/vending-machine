@@ -5,8 +5,10 @@ error_reporting(E_ALL & ~E_NOTICE);
 // настройки
 require_once '../config/config.php';
 
+// автозагрузка класса
 spl_autoload_register(function($class) {
-    include '../classes/' . $class . '.php';
+    if (file_exists($class_filename = '../classes/' . $class . '.php'))
+        include $class_filename;
 });
 
 $api = new API;

@@ -12,15 +12,16 @@ class Coin
      */
     public function __construct()
     {
-        $this->setMoneyType();
+        $this->setMoneyType('coins');
     }
 
     /**
+     * @param $money_type
      * @return $this
      */
-    public function setMoneyType()
+    public function setMoneyType($money_type)
     {
-        $this->money_type = get_parent_class($this) ? 'banknotes' : 'coins';
+        $this->money_type = $money_type;
 
         return $this;
     }
@@ -38,11 +39,11 @@ class Coin
      *
      * @param $denom
      * @param $qty
-     * @return mixed
+     * @return int
      */
     public function changeQuantity($denom, $qty = 1)
     {
-        return DB::changeCoinQuantity($denom, $this->getMoneyType(), $qty);
+        return DB::coinChangeQuantity($denom, $this->getMoneyType(), $qty);
     }
 
     /**
@@ -77,7 +78,7 @@ class Coin
      */
     public function getAll()
     {
-        return DB::getAllCoins($this->getMoneyType());
+        return DB::coinGetAll($this->getMoneyType());
     }
 
     /**
@@ -90,7 +91,7 @@ class Coin
     {
         $qty = $this->getMoneyType() == 'banknotes' ? 0 : 100;
 
-        return DB::restoreCoins($this->getMoneyType(), $qty);
+        return DB::coinRestore($this->getMoneyType(), $qty);
     }
 
     /**

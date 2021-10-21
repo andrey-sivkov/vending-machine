@@ -5,33 +5,14 @@
  */
 class Seance
 {
-    private $dblink, $seanceId;
+    private $seanceId;
 
     /**
      * Seance constructor.
      */
     public function __construct()
     {
-        $this->setDblink()
-            ->setId();
-    }
-
-    /**
-     * @return $this
-     */
-    protected function setDblink()
-    {
-        $this->dblink = DB::getInstance();
-
-        return $this;
-    }
-
-    /**
-     * @return mixed
-     */
-    private function getDblink()
-    {
-        return $this->dblink;
+        $this->setId();
     }
 
     /**
@@ -43,7 +24,7 @@ class Seance
         if (!is_null($seance_id)) {
             $this->seanceId = $seance_id;
         } else {
-            $seance = DB::getSeanceInfo();
+            $seance = DB::seanceGetInfo();
             if (empty($seance['id'])) {
                 // Нет ни одного активного сеанса, начинаем новый
                 $this->seanceId = $this->start();
@@ -75,7 +56,7 @@ class Seance
      */
     private function start()
     {
-        $seance_id = DB::startSeance();
+        $seance_id = DB::seanceStart();
         $this->setId($seance_id);
 
         // логируем старт сеанса
@@ -99,7 +80,7 @@ class Seance
         // логируем завершение сеанса
         $this->addLog('finish');
 
-        return DB::finishSeance($seance_id);
+        return DB::seanceFinish($seance_id);
     }
 
     /**
@@ -109,7 +90,7 @@ class Seance
      */
     public function getBalance()
     {
-        return (int)DB::getSeanceBalance($this->getId());
+        return (int)DB::seanceGetBalance($this->getId());
     }
 
     /**
@@ -121,7 +102,7 @@ class Seance
      */
     public function changeBalance($sum, $action)
     {
-        if (DB::changeSeanceBalance($this->getId(), $sum)) {
+        if (DB::seanceChangeBalance($this->getId(), $sum)) {
             $balance = $this->getBalance();
 
             // логируем внесение денег в аппарат
@@ -197,6 +178,6 @@ class Seance
             'difference' => $difference
         ];
 
-        return DB::addSeanceLog($log);
+        return DB::seanceAddLog($log);
     }
 }

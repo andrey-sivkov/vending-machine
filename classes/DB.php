@@ -26,7 +26,9 @@ class DB
      */
     private function __construct()
     {
-        $dblink = DbSimple_Generic::connect('mysqli://' . DB_SERVER_USERNAME . ':' . DB_SERVER_PASSWORD . '@' . DB_SERVER . '/' . DB_DATABASE);
+        require_once __DIR__ . '../../vendor/DbSimple/Generic.php';
+        $dsn = 'mysqli://' . DB_SERVER_USERNAME . ':' . DB_SERVER_PASSWORD . '@' . DB_SERVER . '/' . DB_DATABASE;
+        $dblink = DbSimple_Generic::connect($dsn);
         $this->setDblink($dblink);
     }
 
@@ -56,18 +58,18 @@ class DB
      * @param $qty
      * @return int
      */
-    public static function changeCoinQuantity($denom, $money_type, $qty = 1)
+    public static function coinChangeQuantity($denom, $money_type, $qty = 1)
     {
         return self::getInstance()->query('update ?# set quantity = quantity + ?d where denom = ?d', $money_type, $qty, $denom);
     }
 
     /**
-     * Список монет / купюр, используемых в работе аппарата
+     * Получение списка монет / купюр, используемых в работе аппарата
      *
      * @param $money_type
      * @return array
      */
-    public static function getAllCoins($money_type)
+    public static function coinGetAll($money_type)
     {
         return self::getInstance()->selectCol('select denom from ?# order by denom', $money_type);
     }
@@ -80,7 +82,7 @@ class DB
      * @param $qty
      * @return int
      */
-    public static function restoreCoins($money_type, $qty = 0)
+    public static function coinRestore($money_type, $qty = 0)
     {
         return self::getInstance()->query('update ?# set quantity = ?d', $money_type, $qty);
     }
@@ -92,7 +94,7 @@ class DB
      * @param $qty
      * @return int
      */
-    public static function changeProductQuantity($product_id, $qty = 1)
+    public static function productChangeQuantity($product_id, $qty)
     {
         return self::getInstance()->query('update products set quantity = quantity + ?d where id = ?d', $qty, $product_id);
     }
@@ -102,7 +104,7 @@ class DB
      *
      * @return array
      */
-    public static function getAllProducts()
+    public static function productGetAll()
     {
         return self::getInstance()->query('select * from products');
     }
@@ -113,7 +115,7 @@ class DB
      * @param $product_id
      * @return array
      */
-    public static function getProductInfo($product_id)
+    public static function productGetInfo($product_id)
     {
         return self::getInstance()->selectRow('select * from products where id = ?d', $product_id);
     }
@@ -123,7 +125,7 @@ class DB
      *
      * @return bool
      */
-    public static function restoreProduct()
+    public static function productRestore()
     {
         $query = 'update products set quantity = case 
             when price = 10 then 10 
@@ -141,7 +143,7 @@ class DB
      *
      * @return array
      */
-    public static function getSeanceInfo()
+    public static function seanceGetInfo()
     {
         return self::getInstance()->selectRow('select id, balance from seances where date_end is null order by id desc limit 1');
     }
@@ -151,18 +153,18 @@ class DB
      *
      * @return int
      */
-    public static function startSeance()
+    public static function seanceStart()
     {
         return self::getInstance()->query('insert into seances (date_start) values (now())');
     }
 
     /**
-     * Закрытие сеанса
+     * Завершение сеанса
      *
      * @param $seance_id
      * @return int
      */
-    public static function finishSeance($seance_id)
+    public static function seanceFinish($seance_id)
     {
         return self::getInstance()->query('update seances set date_end = now() where id = ?d and date_end is null', $seance_id);
     }
@@ -173,7 +175,7 @@ class DB
      * @param $seance_id
      * @return int
      */
-    public static function getSeanceBalance($seance_id)
+    public static function seanceGetBalance($seance_id)
     {
         return self::getInstance()->selectCell('select balance from seances where id = ?d', $seance_id);
     }
@@ -185,7 +187,7 @@ class DB
      * @param $sum
      * @return int
      */
-    public static function changeSeanceBalance($seance_id, $sum)
+    public static function seanceChangeBalance($seance_id, $sum)
     {
         return self::getInstance()->query('update seances set balance = ifnull(balance, 0) + ?d where id = ?d', $sum, $seance_id);
     }
@@ -196,7 +198,7 @@ class DB
      * @param $data
      * @return int
      */
-    public static function addSeanceLog($data)
+    public static function seanceAddLog($data)
     {
         return self::getInstance()->query('insert into logs (?#) values (?a)', array_keys($data), array_values($data));
     }
